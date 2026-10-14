@@ -1,8 +1,59 @@
-# Outlier Exposure for EoMT (Cityscapes)
+# Anomaly Segmentation for Road Scenes
 
-This repository is based on  the original EoMT codebase. If something is unclear, refer to the upstream project: https://github.com/tue-mps/eomt.
+**Outlier Exposure for EoMT on Cityscapes**
 
-The main addition here is **Outlier Exposure (OE)** for semantic segmentation: during training we paste COCO objects into Cityscapes images and train the model with an additional **outlier loss**.
+Project for the **Advanced Machine Learning** course at Politecnico di Torino, by
+Stefano Cardella, Riccardo Mozzicato, Carlo di Pantaleo and Domenico Scalera.
+
+📄 **Report:** [`s341749_s333304_s333106_s347492_project1.pdf`](s341749_s333304_s333106_s347492_project1.pdf)
+
+---
+
+## Overview
+
+Semantic segmentation models for autonomous driving are trained on a fixed set of classes, so they can confidently
+mislabel unexpected objects on the road (animals, debris, lost cargo). This project studies **pixel-level anomaly
+segmentation**: detecting those out-of-distribution (OOD) pixels without hurting in-distribution accuracy.
+
+What we did:
+
+- **Baselines** — evaluated ERFNet and EoMT (Encoder-only Mask Transformer, DINOv2 backbone) trained on Cityscapes,
+  using post-hoc anomaly scores: MSP, MaxLogit, MaxEntropy and RbA.
+- **Temperature scaling** — studied its effect on anomaly detection, applied both to class logits and to per-pixel logits.
+- **Outlier Exposure (OE)** — fine-tuned EoMT by pasting COCO objects into Cityscapes images and adding a dedicated
+  outlier loss, plus variants that paste objects only on the road or rescale them according to perspective.
+- **Benchmarks** — Fishyscapes Lost & Found, Fishyscapes Static, SegmentMeIfYouCan RoadAnomaly21 and RoadObstacle21,
+  and Road Anomaly. Metrics: AUPRC (higher is better) and FPR@TPR95 (lower is better), plus Cityscapes mIoU.
+
+## Key results
+
+MaxLogit anomaly score — AUPRC ↑ / FPR@TPR95 ↓ (%):
+
+| Dataset | ERFNet | EoMT | EoMT + Outlier Exposure |
+|---|---|---|---|
+| SMIYC RA-21 | 38.3 / 59.3 | 68.2 / 31.6 | **77.9 / 29.9** |
+| SMIYC RO-21 | 4.6 / 48.4 | 93.9 / 0.35 | **97.3 / 0.12** |
+| Fishyscapes L&F | 3.3 / 45.5 | 16.5 / 13.8 | **62.4 / 13.6** |
+| Fishyscapes Static | 9.5 / 40.3 | 59.6 / 46.6 | **93.1 / 3.0** |
+| Road Anomaly | 15.6 / 73.2 | 71.1 / 15.2 | **89.6 / 9.2** |
+| **Cityscapes mIoU** | 72.2 | **81.7** | 79.8 |
+
+Takeaways:
+
+- EoMT is a much stronger baseline than ERFNet, both for segmentation (+9.5 mIoU) and for anomaly detection.
+- **Outlier Exposure gives the largest gains**, e.g. AUPRC 16.5 → 62.4 on Fishyscapes L&F and 59.6 → 93.1 on
+  Fishyscapes Static, at the cost of about 1.9 mIoU points. With the RbA score it reaches 97.0 AUPRC on Fishyscapes
+  Static and 91.8 on Road Anomaly.
+- Temperature scaling changes anomaly metrics only marginally and leaves mIoU almost unchanged.
+
+Full logs are in [`eval/results/`](eval/results/).
+
+## Acknowledgements
+
+Built on top of the original [EoMT codebase](https://github.com/tue-mps/eomt) (MIT License, © Mobile Perception
+Systems Lab at TU/e). If something is unclear, refer to the upstream project.
+
+---
 
 ## Repository map (most important files)
 
